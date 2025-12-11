@@ -13,6 +13,24 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 
+interface Module {
+  id: number;
+}
+
+interface Unit {
+  id: number;
+  modules: Module[];
+}
+
+interface SkillPath {
+  id: number;
+  title: string;
+  description: string | null;
+  createdAt: Date;
+  isPublished: boolean;
+  units: Unit[];
+}
+
 export default async function SkillPathsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -79,9 +97,9 @@ export default async function SkillPathsPage() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {skillPaths.map((skillPath) => {
+          {skillPaths.map((skillPath: SkillPath) => {
             const totalModules = skillPath.units.reduce(
-              (acc, unit) => acc + unit.modules.length,
+              (acc: number, unit: Unit) => acc + unit.modules.length,
               0
             );
             
