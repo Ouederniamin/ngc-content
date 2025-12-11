@@ -25,6 +25,19 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+interface Answer {
+  id: number;
+  answer: string;
+  isCorrect: boolean;
+}
+
+interface Question {
+  id: number;
+  question: string;
+  explanation: string | null;
+  answers: Answer[];
+}
+
 async function getQuiz(id: number, userId: string) {
   const quiz = await prisma.quiz.findFirst({
     where: {
@@ -188,7 +201,7 @@ export default async function QuizDetailPage({ params }: PageProps) {
             </div>
           ) : (
             <div className="space-y-6">
-              {quiz.questions.map((question, index) => (
+              {quiz.questions.map((question: Question, index: number) => (
                 <div
                   key={question.id}
                   className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50"
