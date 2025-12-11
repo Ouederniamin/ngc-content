@@ -51,7 +51,8 @@ async function getProjects() {
   });
 
   // Group projects by module
-  const grouped = projects.reduce((acc, project) => {
+  type GroupedProjects = Record<string, { moduleId: number; skillPathTitle: string; projects: typeof projects }>;
+  const grouped = projects.reduce((acc: GroupedProjects, project) => {
     const moduleName = project.module.title;
     if (!acc[moduleName]) {
       acc[moduleName] = {
@@ -62,7 +63,7 @@ async function getProjects() {
     }
     acc[moduleName].projects.push(project);
     return acc;
-  }, {} as Record<string, { moduleId: number; skillPathTitle: string; projects: typeof projects }>);
+  }, {} as GroupedProjects);
 
   return grouped;
 }
