@@ -25,6 +25,21 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+interface Instruction {
+  id: number;
+  title: string;
+  position: number;
+  answers: unknown[];
+}
+
+interface Exercise {
+  id: number;
+  title: string;
+  codeType: string;
+  position: number;
+  instructions: Instruction[];
+}
+
 async function getLesson(id: number, userId: string) {
   const lesson = await prisma.lesson.findFirst({
     where: {
@@ -217,7 +232,7 @@ export default async function LessonDetailPage({ params }: PageProps) {
             </div>
           ) : (
             <div className="space-y-6">
-              {lesson.exercises.map((exercise, index) => (
+              {lesson.exercises.map((exercise: Exercise, index: number) => (
                 <div
                   key={exercise.id}
                   className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50"
@@ -238,7 +253,7 @@ export default async function LessonDetailPage({ params }: PageProps) {
                         Instructions:
                       </p>
                       <ul className="space-y-2">
-                        {exercise.instructions.map((instruction, iIndex) => (
+                        {exercise.instructions.map((instruction: Instruction, iIndex: number) => (
                           <li key={instruction.id} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <span className="shrink-0 w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs">
                               {iIndex + 1}
