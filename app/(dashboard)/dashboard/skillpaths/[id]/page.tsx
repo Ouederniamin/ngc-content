@@ -29,12 +29,17 @@ interface PageProps {
 }
 
 interface Module {
+  id: number;
+  title: string;
   lessons: unknown[];
   quizzes: unknown[];
   projects: unknown[];
 }
 
 interface Unit {
+  id: number;
+  title: string;
+  description: string | null;
   modules: Module[];
 }
 
@@ -183,7 +188,7 @@ export default async function SkillPathDetailPage({ params }: PageProps) {
           </Card>
         ) : (
           <div className="space-y-4">
-            {skillPath.units.map((unit, unitIndex) => (
+            {skillPath.units.map((unit: Unit, unitIndex: number) => (
               <Card key={unit.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -207,7 +212,7 @@ export default async function SkillPathDetailPage({ params }: PageProps) {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {unit.modules.map((module, modIndex) => (
+                      {unit.modules.map((module: Module, modIndex: number) => (
                         <Link
                           key={module.id}
                           href={`/dashboard/modules/${module.id}`}
