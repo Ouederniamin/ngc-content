@@ -51,8 +51,9 @@ async function getProjects() {
   });
 
   // Group projects by module
+  type ProjectType = typeof projects[number];
   type GroupedProjects = Record<string, { moduleId: number; skillPathTitle: string; projects: typeof projects }>;
-  const grouped = projects.reduce((acc: GroupedProjects, project) => {
+  const grouped = projects.reduce((acc: GroupedProjects, project: ProjectType) => {
     const moduleName = project.module.title;
     if (!acc[moduleName]) {
       acc[moduleName] = {
