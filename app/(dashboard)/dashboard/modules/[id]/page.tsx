@@ -23,6 +23,21 @@ import {
   Sparkles,
 } from "lucide-react";
 
+interface Lesson {
+  id: number;
+  title: string;
+}
+
+interface Quiz {
+  id: number;
+  title: string;
+}
+
+interface Project {
+  id: number;
+  title: string;
+}
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -171,7 +186,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                {module.lessons.map((lesson, index) => (
+                {module.lessons.map((lesson: Lesson, index: number) => (
                   <Link
                     key={lesson.id}
                     href={`/dashboard/lessons/${lesson.id}`}
@@ -224,7 +239,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                {module.quizzes.map((quiz, index) => (
+                {module.quizzes.map((quiz: Quiz, index: number) => (
                   <Link
                     key={quiz.id}
                     href={`/dashboard/quizzes/${quiz.id}`}
@@ -277,7 +292,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                {module.projects.map((project, index) => (
+                {module.projects.map((project: Project, index: number) => (
                   <Link
                     key={project.id}
                     href={`/dashboard/projects/${project.id}`}
