@@ -3,6 +3,17 @@ import prisma from "@/lib/db";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+interface ModuleWithUnit {
+  id: number;
+  title: string;
+  unit: {
+    title: string;
+    skillPath: {
+      title: string;
+    };
+  };
+}
+
 export async function GET() {
   const headersList = await headers();
   const session = await auth.api.getSession({
@@ -37,7 +48,7 @@ export async function GET() {
       },
     });
 
-    const formattedModules = modules.map((m) => ({
+    const formattedModules = modules.map((m: ModuleWithUnit) => ({
       id: m.id,
       title: `${m.unit.skillPath.title} > ${m.unit.title} > ${m.title}`,
     }));
