@@ -16,6 +16,8 @@ import {
   Trash2,
   Code,
   ListChecks,
+  Sparkles,
+  FileText,
 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -32,12 +34,23 @@ interface Instruction {
   answers: unknown[];
 }
 
+interface TheoryVariation {
+  id: number;
+  title: string;
+  content: string;
+  style: string;
+  isActive: boolean;
+  position: number;
+  generatedAt: Date;
+}
+
 interface Exercise {
   id: number;
   title: string;
   codeType: string;
   position: number;
   instructions: Instruction[];
+  theoryVariations: TheoryVariation[];
 }
 
 async function getLesson(id: number, userId: string) {
@@ -64,6 +77,11 @@ async function getLesson(id: number, userId: string) {
             },
             include: {
               answers: true,
+            },
+          },
+          theoryVariations: {
+            orderBy: {
+              position: "asc",
             },
           },
         },
@@ -264,6 +282,64 @@ export default async function LessonDetailPage({ params }: PageProps) {
                       </ul>
                     </div>
                   )}
+
+                  {/* Theory Variations */}
+                  <div className="ml-11 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Theory Variations ({exercise.theoryVariations.length})
+                        </p>
+                      </div>
+                      <Link href={`/dashboard/lessons/${lesson.id}/exercises/${exercise.id}/generate-theory`}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Generate Variation
+                        </Button>
+                      </Link>
+                    </div>
+                    
+                    {exercise.theoryVariations.length === 0 ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        No theory variations yet. Generate AI-powered variations for different learning styles.
+                      </p>
+                    ) : (
+                      <div className="grid gap-2">
+                        {exercise.theoryVariations.map((variation: TheoryVariation) => (
+                          <div
+                            key={variation.id}
+                            className={`p-3 rounded-lg border ${
+                              variation.isActive 
+                                ? "border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-900/20" 
+                                : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm text-gray-900 dark:text-white">
+                                  {variation.title}
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  {variation.style}
+                                </Badge>
+                                {variation.isActive && (
+                                  <Badge variant="success" className="text-xs">Active</Badge>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(variation.generatedAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div 
+                              className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 prose dark:prose-invert prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{ __html: variation.content.substring(0, 200) + '...' }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

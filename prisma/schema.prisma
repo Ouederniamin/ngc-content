@@ -199,9 +199,33 @@ model LessonExercise {
   lessonId Int
   lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  instructions LessonInstruction[]
+  instructions     LessonInstruction[]
+  theoryVariations TheoryVariation[]
 
   @@index([lessonId])
+}
+
+// AI-generated theory content variations for exercises
+model TheoryVariation {
+  id          Int      @id @default(autoincrement())
+  title       String   @default("Variation") // e.g., "Beginner Friendly", "Technical Deep Dive", "Visual Learner"
+  titleTn     String?
+  titleFr     String?
+  content     String   @db.Text // The theory content (HTML/Markdown)
+  contentTn   String?  @db.Text
+  contentFr   String?  @db.Text
+  style       String   @default("standard") // standard, simplified, technical, storytelling, visual
+  isActive    Boolean  @default(true) // Whether this variation is active/shown
+  position    Int      @default(1)
+  generatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  exerciseId Int
+  exercise   LessonExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([exerciseId])
 }
 
 model LessonInstruction {
