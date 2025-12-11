@@ -13,6 +13,22 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 
+interface Quiz {
+  id: number;
+  title: string;
+  createdAt: Date;
+  module: {
+    title: string;
+    unit: {
+      title: string;
+      skillPath: {
+        title: string;
+      };
+    };
+  };
+  questions: unknown[];
+}
+
 export default async function QuizzesPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -83,7 +99,7 @@ export default async function QuizzesPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {quizzes.map((quiz) => (
+          {quizzes.map((quiz: Quiz) => (
             <Card key={quiz.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
