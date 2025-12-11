@@ -176,7 +176,7 @@ export default async function LessonDetailPage({ params }: PageProps) {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Instructions</p>
                 <p className="font-semibold">
-                  {lesson.exercises.reduce((acc: number, ex) => acc + ex.instructions.length, 0)} steps
+                  {lesson.exercises.reduce((acc: number, ex: { instructions: unknown[] }) => acc + ex.instructions.length, 0)} steps
                 </p>
               </div>
             </div>
