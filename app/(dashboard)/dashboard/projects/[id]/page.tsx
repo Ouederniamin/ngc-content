@@ -24,6 +24,14 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+interface Task {
+  id: number;
+  title: string;
+  description: string | null;
+  taskType: string;
+  codeType: string | null;
+}
+
 async function getProject(id: number, userId: string) {
   const project = await prisma.project.findFirst({
     where: {
@@ -202,7 +210,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {project.tasks.map((task, index) => (
+              {project.tasks.map((task: Task, index: number) => (
                 <div
                   key={task.id}
                   className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50"
