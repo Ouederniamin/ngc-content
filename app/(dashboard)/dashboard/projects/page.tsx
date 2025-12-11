@@ -14,6 +14,27 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+interface GroupedProjectValue {
+  moduleId: number;
+  skillPathTitle: string;
+  projects: Array<{
+    id: number;
+    title: string;
+    description: string | null;
+    isPublished: boolean;
+    tasks: unknown[];
+    module: {
+      id: number;
+      title: string;
+      unit: {
+        skillPath: {
+          title: string;
+        };
+      };
+    };
+  }>;
+}
+
 async function getProjects() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -113,7 +134,9 @@ export default async function ProjectsPage() {
         </Card>
       ) : (
         <div className="space-y-8">
-          {Object.entries(groupedProjects).map(([moduleName, { moduleId, skillPathTitle, projects }]) => (
+          {Object.entries(groupedProjects).map(([moduleName, data]) => {
+            const { moduleId, skillPathTitle, projects } = data as GroupedProjectValue;
+            return (
             <div key={moduleId} className="space-y-4">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -157,7 +180,8 @@ export default async function ProjectsPage() {
                 ))}
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>
