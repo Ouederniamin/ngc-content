@@ -1,0 +1,403 @@
+// NextGen Coding - AI Content Creation Platform
+// Prisma Schema with BetterAuth + Content Models
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== BETTERAUTH MODELS ====================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+
+  // Content relations
+  skillPaths   SkillPath[]
+  units        Unit[]
+  modules      Module[]
+  lessons      Lesson[]
+  quizzes      Quiz[]
+  projects     Project[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
+}
+
+// ==================== CONTENT MODELS ====================
+
+model SkillPath {
+  id            Int      @id @default(autoincrement())
+  title         String
+  titleTn       String?
+  titleFr       String?
+  description   String?  @db.Text
+  descriptionTn String?  @db.Text
+  descriptionFr String?  @db.Text
+  imageUrl      String?
+  xpPoints      Int?     @default(0)
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Creator relation
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  // Content relations
+  units Unit[]
+
+  @@index([creatorId])
+}
+
+model Unit {
+  id            Int      @id @default(autoincrement())
+  title         String
+  titleTn       String?
+  titleFr       String?
+  description   String?  @db.Text
+  descriptionTn String?  @db.Text
+  descriptionFr String?  @db.Text
+  position      Int      @default(1)
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  skillPathId Int
+  skillPath   SkillPath @relation(fields: [skillPathId], references: [id], onDelete: Cascade)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  modules Module[]
+
+  @@index([skillPathId])
+  @@index([creatorId])
+}
+
+model Module {
+  id            Int      @id @default(autoincrement())
+  title         String
+  titleTn       String?
+  titleFr       String?
+  description   String?  @db.Text
+  descriptionTn String?  @db.Text
+  descriptionFr String?  @db.Text
+  position      Int      @default(1)
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  unitId Int
+  unit   Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  lessons  Lesson[]
+  quizzes  Quiz[]
+  projects Project[]
+
+  @@index([unitId])
+  @@index([creatorId])
+}
+
+model Lesson {
+  id            Int      @id @default(autoincrement())
+  title         String
+  titleTn       String?
+  titleFr       String?
+  notionContent String?  @db.Text // Theory content (HTML)
+  contentTn     String?  @db.Text
+  contentFr     String?  @db.Text
+  position      Int      @default(1)
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  moduleId Int
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  exercises LessonExercise[]
+
+  @@index([moduleId])
+  @@index([creatorId])
+}
+
+model LessonExercise {
+  id                Int      @id @default(autoincrement())
+  title             String
+  titleTn           String?
+  titleFr           String?
+  position          Int      @default(1)
+  codeType          String   @default("html") // html, css, html-css, html-js, html-css-js, javascript, python
+  initialHTMLCode   String?  @db.Text
+  initialCSSCode    String?  @db.Text
+  initialJSCode     String?  @db.Text
+  initialPythonCode String?  @db.Text
+  isPublished       Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  lessonId Int
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  instructions LessonInstruction[]
+
+  @@index([lessonId])
+}
+
+model LessonInstruction {
+  id        Int      @id @default(autoincrement())
+  title     String
+  titleTn   String?
+  titleFr   String?
+  body      String?  @db.Text // Detailed instruction (Markdown/HTML)
+  bodyTn    String?  @db.Text
+  bodyFr    String?  @db.Text
+  position  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  exerciseId Int
+  exercise   LessonExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  answers InstructionAnswer[]
+
+  @@index([exerciseId])
+}
+
+model InstructionAnswer {
+  id           Int      @id @default(autoincrement())
+  htmlAnswer   String?  @db.Text
+  cssAnswer    String?  @db.Text
+  jsAnswer     String?  @db.Text
+  pythonAnswer String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  instructionId Int
+  instruction   LessonInstruction @relation(fields: [instructionId], references: [id], onDelete: Cascade)
+
+  @@index([instructionId])
+}
+
+model Quiz {
+  id            Int      @id @default(autoincrement())
+  title         String
+  titleTn       String?
+  titleFr       String?
+  description   String?  @db.Text
+  descriptionTn String?  @db.Text
+  descriptionFr String?  @db.Text
+  position      Int      @default(1)
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  moduleId Int
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  questions QuizQuestion[]
+
+  @@index([moduleId])
+  @@index([creatorId])
+}
+
+model QuizQuestion {
+  id            Int      @id @default(autoincrement())
+  question      String   @db.Text
+  questionTn    String?  @db.Text
+  questionFr    String?  @db.Text
+  explanation   String?  @db.Text
+  explanationTn String?  @db.Text
+  explanationFr String?  @db.Text
+  position      Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  quizId Int
+  quiz   Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  answers QuizAnswer[]
+
+  @@index([quizId])
+}
+
+model QuizAnswer {
+  id        Int      @id @default(autoincrement())
+  answer    String   @db.Text
+  answerTn  String?  @db.Text
+  answerFr  String?  @db.Text
+  isCorrect Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  questionId Int
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model Project {
+  id            Int      @id @default(autoincrement())
+  title         String
+  titleTn       String?
+  titleFr       String?
+  description   String?  @db.Text
+  descriptionTn String?  @db.Text
+  descriptionFr String?  @db.Text
+  notionContent String?  @db.Text // Project brief (HTML)
+  contentTn     String?  @db.Text
+  contentFr     String?  @db.Text
+  position      Int      @default(1)
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  moduleId Int
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  tasks ProjectTask[]
+
+  @@index([moduleId])
+  @@index([creatorId])
+}
+
+model ProjectTask {
+  id                Int      @id @default(autoincrement())
+  title             String
+  titleTn           String?
+  titleFr           String?
+  description       String?  @db.Text
+  descriptionTn     String?  @db.Text
+  descriptionFr     String?  @db.Text
+  notionContent     String?  @db.Text
+  contentTn         String?  @db.Text
+  contentFr         String?  @db.Text
+  position          Int      @default(1)
+  taskType          String   @default("CODE") // CODE, IMAGE, etc.
+  codeType          String?  @default("html")
+  initialHTMLCode   String?  @db.Text
+  initialCSSCode    String?  @db.Text
+  initialJSCode     String?  @db.Text
+  initialPythonCode String?  @db.Text
+  isPublished       Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  instructions TaskInstruction[]
+
+  @@index([projectId])
+}
+
+model TaskInstruction {
+  id        Int      @id @default(autoincrement())
+  title     String
+  titleTn   String?
+  titleFr   String?
+  body      String?  @db.Text
+  bodyTn    String?  @db.Text
+  bodyFr    String?  @db.Text
+  position  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  taskId Int
+  task   ProjectTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  answers TaskInstructionAnswer[]
+
+  @@index([taskId])
+}
+
+model TaskInstructionAnswer {
+  id           Int      @id @default(autoincrement())
+  htmlAnswer   String?  @db.Text
+  cssAnswer    String?  @db.Text
+  jsAnswer     String?  @db.Text
+  pythonAnswer String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  taskInstructionId Int
+  taskInstruction   TaskInstruction @relation(fields: [taskInstructionId], references: [id], onDelete: Cascade)
+
+  @@index([taskInstructionId])
+}
