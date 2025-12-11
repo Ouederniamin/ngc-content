@@ -13,6 +13,22 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 
+interface Lesson {
+  id: number;
+  title: string;
+  createdAt: Date;
+  exercises: unknown[];
+  module: {
+    title: string;
+    unit: {
+      title: string;
+      skillPath: {
+        title: string;
+      };
+    };
+  };
+}
+
 export default async function LessonsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -83,7 +99,7 @@ export default async function LessonsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {lessons.map((lesson) => (
+          {lessons.map((lesson: Lesson) => (
             <Card key={lesson.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
