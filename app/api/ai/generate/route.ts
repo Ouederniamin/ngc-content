@@ -30,8 +30,8 @@ export async function POST(request: Request) {
     model,
     system: systemPrompt,
     prompt: fullPrompt,
-    maxTokens: 4000,
+    maxOutputTokens: 4000,
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }
