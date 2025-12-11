@@ -28,6 +28,16 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+interface Module {
+  lessons: unknown[];
+  quizzes: unknown[];
+  projects: unknown[];
+}
+
+interface Unit {
+  modules: Module[];
+}
+
 export default async function SkillPathDetailPage({ params }: PageProps) {
   const { id } = await params;
   
@@ -66,22 +76,22 @@ export default async function SkillPathDetailPage({ params }: PageProps) {
   }
 
   const totalModules = skillPath.units.reduce(
-    (acc, unit) => acc + unit.modules.length,
+    (acc: number, unit: Unit) => acc + unit.modules.length,
     0
   );
   const totalLessons = skillPath.units.reduce(
-    (acc, unit) =>
-      acc + unit.modules.reduce((m, mod) => m + mod.lessons.length, 0),
+    (acc: number, unit: Unit) =>
+      acc + unit.modules.reduce((m: number, mod: Module) => m + mod.lessons.length, 0),
     0
   );
   const totalQuizzes = skillPath.units.reduce(
-    (acc, unit) =>
-      acc + unit.modules.reduce((m, mod) => m + mod.quizzes.length, 0),
+    (acc: number, unit: Unit) =>
+      acc + unit.modules.reduce((m: number, mod: Module) => m + mod.quizzes.length, 0),
     0
   );
   const totalProjects = skillPath.units.reduce(
-    (acc, unit) =>
-      acc + unit.modules.reduce((m, mod) => m + mod.projects.length, 0),
+    (acc: number, unit: Unit) =>
+      acc + unit.modules.reduce((m: number, mod: Module) => m + mod.projects.length, 0),
     0
   );
 
