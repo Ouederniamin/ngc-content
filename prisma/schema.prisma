@@ -159,9 +159,9 @@ model Lesson {
   title         String
   titleTn       String?
   titleFr       String?
-  notionContent String?  @db.Text // Theory content (HTML)
-  contentTn     String?  @db.Text
-  contentFr     String?  @db.Text
+  description   String?  @db.Text // Brief lesson description
+  descriptionTn String?  @db.Text
+  descriptionFr String?  @db.Text
   position      Int      @default(1)
   isPublished   Boolean  @default(false)
   createdAt     DateTime @default(now())
@@ -174,10 +174,36 @@ model Lesson {
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
-  exercises LessonExercise[]
+  // Lesson content
+  scrimbaScripts ScrimbaScript[] // 3 AI-generated theory variations (scrimba scripts)
+  exercises      LessonExercise[]
 
   @@index([moduleId])
   @@index([creatorId])
+}
+
+// AI-generated Scrimba Script variations (theory content) for Lessons
+// Each lesson can have up to 3 variations with different teaching styles
+model ScrimbaScript {
+  id          Int      @id @default(autoincrement())
+  title       String   @default("Script Variation") // e.g., "Beginner Friendly", "Technical Deep Dive", "Visual Approach"
+  titleTn     String?
+  titleFr     String?
+  content     String   @db.Text // The scrimba script content (HTML/Markdown)
+  contentTn   String?  @db.Text
+  contentFr   String?  @db.Text
+  style       String   @default("standard") // standard, simplified, technical, storytelling, visual, interactive
+  isActive    Boolean  @default(true) // Whether this variation is currently active
+  variationNumber Int  @default(1) // 1, 2, or 3 - which variation slot this fills
+  generatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  lessonId Int
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
 }
 
 model LessonExercise {
@@ -185,6 +211,12 @@ model LessonExercise {
   title             String
   titleTn           String?
   titleFr           String?
+  description       String?  @db.Text // Brief exercise description
+  descriptionTn     String?  @db.Text
+  descriptionFr     String?  @db.Text
+  content           String?  @db.Text // Exercise content/explanation (HTML/Markdown)
+  contentTn         String?  @db.Text
+  contentFr         String?  @db.Text
   position          Int      @default(1)
   codeType          String   @default("html") // html, css, html-css, html-js, html-css-js, javascript, python
   initialHTMLCode   String?  @db.Text
@@ -199,33 +231,9 @@ model LessonExercise {
   lessonId Int
   lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  instructions     LessonInstruction[]
-  theoryVariations TheoryVariation[]
+  instructions LessonInstruction[]
 
   @@index([lessonId])
-}
-
-// AI-generated theory content variations for exercises
-model TheoryVariation {
-  id          Int      @id @default(autoincrement())
-  title       String   @default("Variation") // e.g., "Beginner Friendly", "Technical Deep Dive", "Visual Learner"
-  titleTn     String?
-  titleFr     String?
-  content     String   @db.Text // The theory content (HTML/Markdown)
-  contentTn   String?  @db.Text
-  contentFr   String?  @db.Text
-  style       String   @default("standard") // standard, simplified, technical, storytelling, visual
-  isActive    Boolean  @default(true) // Whether this variation is active/shown
-  position    Int      @default(1)
-  generatedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  exerciseId Int
-  exercise   LessonExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-
-  @@index([exerciseId])
 }
 
 model LessonInstruction {
