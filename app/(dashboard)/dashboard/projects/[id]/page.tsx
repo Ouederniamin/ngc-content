@@ -19,6 +19,7 @@ import {
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { RichTextViewer } from "@/components/rich-text-editor";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -123,13 +124,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/projects/${project.id}/edit`}>
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Project
+            </Link>
           </Button>
         </div>
       </div>
@@ -187,10 +186,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div 
-              className="prose dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: project.notionContent }}
-            />
+            <RichTextViewer content={project.notionContent} />
           </CardContent>
         </Card>
       )}

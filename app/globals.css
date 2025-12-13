@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,4 +120,376 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Tiptap Rich Text Editor Styles */
+.tiptap-editor {
+  @apply prose prose-sm dark:prose-invert max-w-none;
+}
+
+.tiptap-editor:focus {
+  @apply outline-none;
+}
+
+.tiptap-editor p.is-editor-empty:first-child::before {
+  @apply text-gray-400 dark:text-gray-500 float-left h-0 pointer-events-none;
+  content: attr(data-placeholder);
+}
+
+/* Code block styling for Tiptap editor */
+.ProseMirror pre,
+.tiptap-editor pre {
+  @apply bg-gray-900 dark:bg-gray-950 text-gray-100 rounded-lg p-4 my-3 overflow-x-auto;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.ProseMirror pre code,
+.tiptap-editor pre code {
+  @apply bg-transparent text-inherit p-0 text-sm leading-relaxed;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  color: inherit;
+}
+
+.tiptap-editor code,
+.ProseMirror code:not(pre code) {
+  @apply bg-gray-100 dark:bg-gray-800 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded text-sm;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.tiptap-editor blockquote {
+  @apply border-l-4 border-blue-500 pl-4 italic text-gray-600 dark:text-gray-400 my-4;
+}
+
+.tiptap-editor h1 {
+  @apply text-2xl font-bold mt-6 mb-4;
+}
+
+.tiptap-editor h2 {
+  @apply text-xl font-bold mt-5 mb-3;
+}
+
+.tiptap-editor h3 {
+  @apply text-lg font-semibold mt-4 mb-2;
+}
+
+.tiptap-editor ul {
+  @apply list-disc list-inside my-3 space-y-1;
+}
+
+.tiptap-editor ol {
+  @apply list-decimal list-inside my-3 space-y-1;
+}
+
+.tiptap-editor p {
+  @apply my-2 leading-relaxed;
+}
+
+.tiptap-editor strong {
+  @apply font-bold;
+}
+
+.tiptap-editor em {
+  @apply italic;
+}
+
+.tiptap-editor s {
+  @apply line-through;
+}
+
+/* Highlight marks with color support - Light and Dark mode */
+.ProseMirror mark,
+.tiptap-editor mark,
+.rich-text-viewer mark {
+  @apply px-1 py-0.5 rounded transition-colors;
+}
+
+/* Default highlight (yellow) */
+.ProseMirror mark:not([data-color]),
+.tiptap-editor mark:not([data-color]),
+.rich-text-viewer mark:not([data-color]) {
+  background-color: #fef08a;
+  color: #422006;
+}
+.dark .ProseMirror mark:not([data-color]),
+.dark .tiptap-editor mark:not([data-color]),
+.dark .rich-text-viewer mark:not([data-color]) {
+  background-color: #713f12;
+  color: #fef9c3;
+}
+
+/* Highlight colors - Yellow */
+mark[data-color="highlight-yellow"] {
+  background-color: #fef08a !important;
+  color: #422006 !important;
+}
+.dark mark[data-color="highlight-yellow"] {
+  background-color: #713f12 !important;
+  color: #fef9c3 !important;
+}
+
+/* Highlight colors - Green */
+mark[data-color="highlight-green"] {
+  background-color: #bbf7d0 !important;
+  color: #14532d !important;
+}
+.dark mark[data-color="highlight-green"] {
+  background-color: #14532d !important;
+  color: #bbf7d0 !important;
+}
+
+/* Highlight colors - Blue */
+mark[data-color="highlight-blue"] {
+  background-color: #bfdbfe !important;
+  color: #1e3a8a !important;
+}
+.dark mark[data-color="highlight-blue"] {
+  background-color: #1e3a5f !important;
+  color: #bfdbfe !important;
+}
+
+/* Highlight colors - Purple */
+mark[data-color="highlight-purple"] {
+  background-color: #e9d5ff !important;
+  color: #581c87 !important;
+}
+.dark mark[data-color="highlight-purple"] {
+  background-color: #4c1d95 !important;
+  color: #e9d5ff !important;
+}
+
+/* Highlight colors - Pink */
+mark[data-color="highlight-pink"] {
+  background-color: #fbcfe8 !important;
+  color: #831843 !important;
+}
+.dark mark[data-color="highlight-pink"] {
+  background-color: #831843 !important;
+  color: #fbcfe8 !important;
+}
+
+/* Highlight colors - Orange */
+mark[data-color="highlight-orange"] {
+  background-color: #fed7aa !important;
+  color: #7c2d12 !important;
+}
+.dark mark[data-color="highlight-orange"] {
+  background-color: #7c2d12 !important;
+  color: #fed7aa !important;
+}
+
+/* Highlight colors - Red */
+mark[data-color="highlight-red"] {
+  background-color: #fecaca !important;
+  color: #7f1d1d !important;
+}
+.dark mark[data-color="highlight-red"] {
+  background-color: #7f1d1d !important;
+  color: #fecaca !important;
+}
+
+/* Highlight colors - Cyan */
+mark[data-color="highlight-cyan"] {
+  background-color: #a5f3fc !important;
+  color: #155e75 !important;
+}
+.dark mark[data-color="highlight-cyan"] {
+  background-color: #164e63 !important;
+  color: #a5f3fc !important;
+}
+
+/* Inline code styling - Default (Pink) */
+.ProseMirror code:not(pre code),
+.tiptap-editor code:not(pre code),
+.rich-text-viewer code:not(pre code) {
+  @apply px-1.5 py-0.5 rounded text-sm font-mono;
+  background-color: #fce7f3;
+  color: #be185d;
+}
+.dark .ProseMirror code:not(pre code),
+.dark .tiptap-editor code:not(pre code),
+.dark .rich-text-viewer code:not(pre code) {
+  background-color: #831843;
+  color: #fbcfe8;
+}
+
+/* Inline code styles - Pink */
+code[data-code-style="code-pink"] {
+  background-color: #fce7f3 !important;
+  color: #be185d !important;
+}
+.dark code[data-code-style="code-pink"] {
+  background-color: #831843 !important;
+  color: #fbcfe8 !important;
+}
+
+/* Inline code styles - Blue */
+code[data-code-style="code-blue"] {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+.dark code[data-code-style="code-blue"] {
+  background-color: #1e3a8a !important;
+  color: #bfdbfe !important;
+}
+
+/* Inline code styles - Green */
+code[data-code-style="code-green"] {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+}
+.dark code[data-code-style="code-green"] {
+  background-color: #14532d !important;
+  color: #bbf7d0 !important;
+}
+
+/* Inline code styles - Purple */
+code[data-code-style="code-purple"] {
+  background-color: #f3e8ff !important;
+  color: #7c3aed !important;
+}
+.dark code[data-code-style="code-purple"] {
+  background-color: #4c1d95 !important;
+  color: #e9d5ff !important;
+}
+
+/* Inline code styles - Orange */
+code[data-code-style="code-orange"] {
+  background-color: #ffedd5 !important;
+  color: #c2410c !important;
+}
+.dark code[data-code-style="code-orange"] {
+  background-color: #7c2d12 !important;
+  color: #fed7aa !important;
+}
+
+/* Inline code styles - Gray */
+code[data-code-style="code-gray"] {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+.dark code[data-code-style="code-gray"] {
+  background-color: #374151 !important;
+  color: #e5e7eb !important;
+}
+
+/* Syntax highlighting for code blocks */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-name,
+.hljs-tag {
+  @apply text-purple-400;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-section,
+.hljs-attribute,
+.hljs-literal,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-addition {
+  @apply text-green-400;
+}
+
+.hljs-deletion,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-meta {
+  @apply text-red-400;
+}
+
+.hljs-doctag,
+.hljs-attr {
+  @apply text-blue-400;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-subst,
+.hljs-selector-id,
+.hljs-selector-class {
+  @apply text-cyan-400;
+}
+
+.hljs-number {
+  @apply text-orange-400;
+}
+
+.hljs-comment {
+  @apply text-gray-500 italic;
+}
+
+.hljs-emphasis {
+  @apply italic;
+}
+
+.hljs-strong {
+  @apply font-bold;
+}
+
+/* Code Block Wrapper Styles */
+.code-block-wrapper,
+.code-block-container {
+  @apply relative my-4 rounded-lg overflow-hidden;
+}
+
+.code-block-wrapper .code-block-content {
+  @apply relative;
+}
+
+.code-block-wrapper .code-block-content pre {
+  @apply m-0 bg-transparent;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.code-block-wrapper .code-block-content code {
+  @apply bg-transparent p-0;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.code-block-wrapper pre,
+.code-block-container pre {
+  @apply mt-0 rounded-t-none bg-gray-900 dark:bg-gray-950 text-gray-100 p-4 overflow-x-auto;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.code-block-wrapper pre code,
+.code-block-container pre code {
+  @apply bg-transparent text-inherit p-0 text-sm leading-relaxed;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.code-block-header {
+  @apply flex items-center justify-between px-4 py-2 bg-gray-800 dark:bg-gray-900 border-b border-gray-700 text-xs;
+}
+
+/* Rich Text Viewer Code Block Styles */
+.rich-text-viewer .code-block-container pre {
+  @apply mt-0 rounded-t-none;
+}
+
+.rich-text-viewer pre:not(.code-block-container pre) {
+  @apply bg-gray-900 dark:bg-gray-950 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.rich-text-viewer code:not(pre code) {
+  @apply bg-gray-100 dark:bg-gray-800 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded text-sm;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Line numbers for code blocks (optional enhancement) */
+.code-block-wrapper pre code,
+.code-block-container pre code {
+  counter-reset: line;
+}
+
+.code-block-wrapper pre code .line::before,
+.code-block-container pre code .line::before {
+  counter-increment: line;
+  content: counter(line);
+  @apply inline-block w-8 mr-4 text-right text-gray-500 select-none;
 }

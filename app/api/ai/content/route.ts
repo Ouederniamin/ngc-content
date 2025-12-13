@@ -35,7 +35,7 @@ const LessonExerciseSchema = z.object({
 
 const LessonSchema = z.object({
   title: z.string(),
-  notionContent: z.string().describe("HTML content for the theory section"),
+  description: z.string().describe("Brief description of what the lesson covers"),
   exercises: z.array(LessonExerciseSchema),
 });
 
@@ -211,7 +211,7 @@ export async function POST(request: Request) {
       savedContent = await prisma.lesson.create({
         data: {
           title: data.title,
-          notionContent: data.notionContent,
+          description: data.description,
           moduleId: parseInt(moduleId),
           position: existingLessons + 1,
           creatorId: session.user.id,

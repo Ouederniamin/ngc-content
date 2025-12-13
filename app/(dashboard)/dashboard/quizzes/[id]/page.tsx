@@ -132,13 +132,11 @@ export default async function QuizDetailPage({ params }: PageProps) {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/quizzes/${quiz.id}/edit`}>
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Quiz
+            </Link>
           </Button>
         </div>
       </div>

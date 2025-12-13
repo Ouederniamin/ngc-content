@@ -22,6 +22,9 @@ import {
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { GenerateAllExercisesButton } from "@/components/generate-all-exercises-button";
+import { RichTextViewer } from "@/components/rich-text-editor";
+import { EditableScrimbaScript } from "@/components/editable-scrimba-script";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -34,23 +37,24 @@ interface Instruction {
   answers: unknown[];
 }
 
-interface TheoryVariation {
+interface ScrimbaScript {
   id: number;
   title: string;
   content: string;
   style: string;
   isActive: boolean;
-  position: number;
+  variationNumber: number;
   generatedAt: Date;
 }
 
 interface Exercise {
   id: number;
   title: string;
+  description: string | null;
+  content: string | null;
   codeType: string;
   position: number;
   instructions: Instruction[];
-  theoryVariations: TheoryVariation[];
 }
 
 async function getLesson(id: number, userId: string) {
@@ -66,6 +70,11 @@ async function getLesson(id: number, userId: string) {
       },
     },
     include: {
+      scrimbaScripts: {
+        orderBy: {
+          variationNumber: "asc",
+        },
+      },
       exercises: {
         orderBy: {
           position: "asc",
@@ -77,11 +86,6 @@ async function getLesson(id: number, userId: string) {
             },
             include: {
               answers: true,
-            },
-          },
-          theoryVariations: {
-            orderBy: {
-              position: "asc",
             },
           },
         },
@@ -217,129 +221,151 @@ export default async function LessonDetailPage({ params }: PageProps) {
         </Card>
       </div>
 
-      {/* Theory Content */}
-      {lesson.notionContent && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Theory Content</CardTitle>
-            <CardDescription>
-              Lesson content displayed to students
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div 
-              className="prose dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: lesson.notionContent }}
-            />
-          </CardContent>
-        </Card>
-      )}
+      {/* Scrimba Scripts (Theory Content) */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Scrimba Scripts</CardTitle>
+              <CardDescription>
+                AI-generated theory content variations for different learning styles
+              </CardDescription>
+            </div>
+            <Link href={`/dashboard/lessons/${lesson.id}/generate-theory`}>
+              <Button size="sm" variant="outline">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Script
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {(!lesson.scrimbaScripts || lesson.scrimbaScripts.length === 0) ? (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No scrimba scripts yet.</p>
+              <p className="text-sm">Generate AI-powered theory content for different learning styles.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {lesson.scrimbaScripts.map((script: ScrimbaScript) => (
+                <EditableScrimbaScript
+                  key={script.id}
+                  script={{
+                    ...script,
+                    generatedAt: script.generatedAt.toISOString(),
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Exercises */}
       <Card>
         <CardHeader>
-          <CardTitle>Exercises</CardTitle>
-          <CardDescription>
-            Hands-on coding exercises for this lesson
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Exercises</CardTitle>
+              <CardDescription>
+                Hands-on coding exercises for this lesson
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <GenerateAllExercisesButton
+                lessonId={lesson.id}
+                exercises={lesson.exercises.map((ex: Exercise) => ({
+                  id: ex.id,
+                  title: ex.title,
+                  codeType: ex.codeType,
+                }))}
+              />
+              <Link href={`/dashboard/lessons/${lesson.id}/exercises/new`}>
+                <Button size="sm" variant="outline">
+                  <Code className="w-4 h-4 mr-2" />
+                  Add Exercise
+                </Button>
+              </Link>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {lesson.exercises.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              No exercises yet
+              <Code className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No exercises yet.</p>
+              <p className="text-sm">Create hands-on coding exercises for students to practice.</p>
             </div>
           ) : (
             <div className="space-y-6">
               {lesson.exercises.map((exercise: Exercise, index: number) => (
                 <div
                   key={exercise.id}
-                  className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50"
+                  className="p-5 border rounded-xl bg-white dark:bg-gray-800/50 shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold text-sm">
-                      {index + 1}
-                    </span>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
-                      {exercise.title}
-                    </h3>
-                    <Badge variant="outline">{exercise.codeType}</Badge>
+                  {/* Exercise Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold text-sm">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
+                          {exercise.title}
+                        </h3>
+                        <Badge variant="outline" className="mt-1">{exercise.codeType}</Badge>
+                      </div>
+                    </div>
+                    <Link href={`/dashboard/lessons/${lesson.id}/exercises/${exercise.id}`}>
+                      <Button size="sm" variant="ghost">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </Link>
                   </div>
-                  
-                  {exercise.instructions.length > 0 && (
-                    <div className="ml-11 space-y-2">
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Instructions:
+
+                  {/* Exercise Description */}
+                  {exercise.description && (
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        {exercise.description}
                       </p>
-                      <ul className="space-y-2">
-                        {exercise.instructions.map((instruction: Instruction, iIndex: number) => (
-                          <li key={instruction.id} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <span className="shrink-0 w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs">
-                              {iIndex + 1}
-                            </span>
-                            <span>{instruction.title}</span>
-                          </li>
-                        ))}
-                      </ul>
                     </div>
                   )}
 
-                  {/* Theory Variations */}
-                  <div className="ml-11 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Theory Variations ({exercise.theoryVariations.length})
-                        </p>
-                      </div>
-                      <Link href={`/dashboard/lessons/${lesson.id}/exercises/${exercise.id}/generate-theory`}>
-                        <Button size="sm" variant="outline" className="h-7 text-xs">
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          Generate Variation
-                        </Button>
-                      </Link>
-                    </div>
-                    
-                    {exercise.theoryVariations.length === 0 ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        No theory variations yet. Generate AI-powered variations for different learning styles.
+                  {/* Exercise Content */}
+                  {exercise.content && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        Exercise Content
                       </p>
-                    ) : (
-                      <div className="grid gap-2">
-                        {exercise.theoryVariations.map((variation: TheoryVariation) => (
-                          <div
-                            key={variation.id}
-                            className={`p-3 rounded-lg border ${
-                              variation.isActive 
-                                ? "border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-900/20" 
-                                : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-                            }`}
+                      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <RichTextViewer content={exercise.content} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  {exercise.instructions.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                        Instructions ({exercise.instructions.length} steps)
+                      </p>
+                      <div className="space-y-2">
+                        {exercise.instructions.map((instruction: Instruction, iIndex: number) => (
+                          <div 
+                            key={instruction.id} 
+                            className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
                           >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm text-gray-900 dark:text-white">
-                                  {variation.title}
-                                </span>
-                                <Badge variant="outline" className="text-xs">
-                                  {variation.style}
-                                </Badge>
-                                {variation.isActive && (
-                                  <Badge variant="success" className="text-xs">Active</Badge>
-                                )}
-                              </div>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(variation.generatedAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div 
-                              className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 prose dark:prose-invert prose-sm max-w-none"
-                              dangerouslySetInnerHTML={{ __html: variation.content.substring(0, 200) + '...' }}
-                            />
+                            <span className="shrink-0 w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center text-xs font-medium">
+                              {iIndex + 1}
+                            </span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{instruction.title}</span>
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

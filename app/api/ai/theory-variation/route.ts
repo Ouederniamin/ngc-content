@@ -33,6 +33,10 @@ Make it memorable and relatable while ensuring the technical accuracy.`,
 Include plenty of code examples with detailed comments, describe visual diagrams,
 use bullet points and numbered lists, and format code snippets clearly.
 Describe step-by-step what happens visually when code runs.`,
+
+  interactive: `Write theory content designed for interactive learning.
+Include thought-provoking questions, mini-challenges, and encourage experimentation.
+Break content into digestible chunks with clear action items.`,
 };
 
 export async function POST(request: NextRequest) {
@@ -46,68 +50,66 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { exerciseId, lessonId, style, title } = await request.json();
+    const { lessonId, style, title } = await request.json();
 
-    if (!exerciseId || !lessonId || !style) {
+    if (!lessonId || !style) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Verify the exercise belongs to the user
-    const exercise = await prisma.lessonExercise.findFirst({
+    // Verify the lesson belongs to the user
+    const lesson = await prisma.lesson.findFirst({
       where: {
-        id: exerciseId,
-        lessonId: lessonId,
-        lesson: {
-          module: {
-            unit: {
-              skillPath: {
-                creatorId: session.user.id,
-              },
+        id: lessonId,
+        module: {
+          unit: {
+            skillPath: {
+              creatorId: session.user.id,
             },
           },
         },
       },
       include: {
-        lesson: {
+        module: {
           include: {
-            module: {
+            unit: {
               include: {
-                unit: {
-                  include: {
-                    skillPath: true,
-                  },
-                },
+                skillPath: true,
               },
             },
           },
         },
-        instructions: {
+        exercises: {
           orderBy: { position: "asc" },
+          include: {
+            instructions: {
+              orderBy: { position: "asc" },
+            },
+          },
         },
       },
     });
 
-    if (!exercise) {
+    if (!lesson) {
       return NextResponse.json(
-        { error: "Exercise not found or unauthorized" },
+        { error: "Lesson not found or unauthorized" },
         { status: 404 }
       );
     }
 
     // Build context for AI
     const lessonContext = `
-SkillPath: ${exercise.lesson.module.unit.skillPath.title}
-Unit: ${exercise.lesson.module.unit.title}
-Module: ${exercise.lesson.module.title}
-Lesson: ${exercise.lesson.title}
-Exercise: ${exercise.title}
-Code Type: ${exercise.codeType}
+SkillPath: ${lesson.module.unit.skillPath.title}
+Unit: ${lesson.module.unit.title}
+Module: ${lesson.module.title}
+Lesson: ${lesson.title}
+${lesson.description ? `Description: ${lesson.description}` : ""}
 
-Instructions in this exercise:
-${exercise.instructions.map((inst, i) => `${i + 1}. ${inst.title}`).join("\n")}
+Exercises in this lesson:
+${lesson.exercises.map((ex, i) => `${i + 1}. ${ex.title} (${ex.codeType})
+   Instructions: ${ex.instructions.map(inst => inst.title).join(", ")}`).join("\n")}
 `;
 
     const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.standard;
@@ -116,57 +118,104 @@ ${exercise.instructions.map((inst, i) => `${i + 1}. ${inst.title}`).join("\n")}
 
 ${stylePrompt}
 
-Create theory content for the following exercise:
+Create a Scrimba Script (theory content) for the following lesson:
 
 ${lessonContext}
 
 Requirements:
-1. Write comprehensive theory content that prepares students for the exercise
-2. Explain the concepts they need to understand before attempting the exercise
-3. Use HTML formatting for the content (headings, paragraphs, code blocks, lists)
-4. Make sure the content is directly relevant to what the exercise teaches
-5. Include at least one code example if applicable
-6. The content should be between 500-1000 words
+1. Write comprehensive theory content that prepares students for the lesson exercises
+2. Explain the concepts they need to understand before attempting the exercises
+3. Make sure the content is directly relevant to what the lesson teaches
+4. Include at least 2-3 code examples if applicable
+5. The content should be between 800-1500 words
+6. Structure it like a Scrimba screencast script - engaging, conversational, and educational
 
-Return ONLY the HTML content, no markdown, no code blocks wrapping.`;
+TIPTAP HTML FORMAT REQUIREMENTS (MUST FOLLOW EXACTLY):
+
+1. PARAGRAPHS: Use <p> tags for all text paragraphs
+   Example: <p>This is a paragraph of explanatory text.</p>
+
+2. HEADINGS: Use <h2> for main sections, <h3> for subsections
+   Example: <h2>Understanding Variables</h2>
+
+3. CODE BLOCKS: Use <pre><code class="language-javascript">...</code></pre> for multi-line code
+   - ALWAYS include the language class (language-javascript, language-python, etc.)
+   - Escape HTML entities in code: < as &lt;, > as &gt;, & as &amp;
+   Example: <pre><code class="language-javascript">const greeting = "Hello";\nconsole.log(greeting);</code></pre>
+
+4. INLINE CODE: Use <code>variableName</code> for inline code references
+   Example: <p>Use the <code>console.log()</code> function to print output.</p>
+
+5. BOLD TEXT: Use <strong>text</strong> for emphasis
+   Example: <p><strong>Important:</strong> Always validate user input.</p>
+
+6. ITALIC TEXT: Use <em>text</em> for emphasis
+   Example: <p>This is <em>especially</em> important.</p>
+
+7. HIGHLIGHTED TEXT: Use <mark data-color="highlight-yellow">text</mark> for key concepts
+   Available data-color values: highlight-yellow, highlight-green, highlight-blue, highlight-purple, highlight-pink
+   Example: <p>The <mark data-color="highlight-yellow">return statement</mark> is essential.</p>
+
+8. LISTS: Use <ul><li>item</li></ul> for bullet lists, <ol><li>item</li></ol> for numbered
+   Example: <ul><li>First point</li><li>Second point</li></ul>
+
+9. BLOCKQUOTES: Use <blockquote><p>text</p></blockquote> for notes/tips
+   Example: <blockquote><p>Pro tip: Use descriptive variable names.</p></blockquote>
+
+Return ONLY valid HTML. No markdown, no code fences wrapping the response.
+Start directly with <h2> or <p>.`;
 
     const model = azure(process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4o-mini");
+
+    console.log("Generating scrimba script with model:", process.env.AZURE_OPENAI_DEPLOYMENT);
+    console.log("Prompt length:", prompt.length);
 
     const { text } = await generateText({
       model,
       prompt,
-      maxOutputTokens: 2000,
+      maxOutputTokens: 3000,
     });
 
-    // Get the current count of variations for positioning
-    const existingCount = await prisma.theoryVariation.count({
-      where: { exerciseId },
+    console.log("Generated text length:", text?.length || 0);
+    console.log("Generated text preview:", text?.substring(0, 200));
+
+    if (!text || text.trim().length === 0) {
+      return NextResponse.json(
+        { error: "AI generated empty content. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    // Get the current count of scripts for variation numbering
+    const existingCount = await prisma.scrimbaScript.count({
+      where: { lessonId },
     });
 
-    // Save the generated variation
-    const variation = await prisma.theoryVariation.create({
+    // Save the generated script
+    const script = await prisma.scrimbaScript.create({
       data: {
-        title: title || STYLE_PROMPTS[style] ? style.charAt(0).toUpperCase() + style.slice(1) : "Variation",
-        content: text,
+        title: title || (STYLE_PROMPTS[style] ? style.charAt(0).toUpperCase() + style.slice(1) : "Script Variation"),
+        content: text.trim(),
         style: style,
-        isActive: existingCount === 0, // First variation is active by default
-        position: existingCount + 1,
-        exerciseId: exerciseId,
+        isActive: existingCount === 0, // First script is active by default
+        variationNumber: existingCount + 1,
+        lessonId: lessonId,
       },
     });
 
     return NextResponse.json({
       success: true,
-      variation: {
-        id: variation.id,
-        title: variation.title,
-        style: variation.style,
+      script: {
+        id: script.id,
+        title: script.title,
+        style: script.style,
+        variationNumber: script.variationNumber,
       },
     });
   } catch (error) {
-    console.error("Error generating theory variation:", error);
+    console.error("Error generating scrimba script:", error);
     return NextResponse.json(
-      { error: "Failed to generate theory variation" },
+      { error: "Failed to generate scrimba script" },
       { status: 500 }
     );
   }
